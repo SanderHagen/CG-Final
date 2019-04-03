@@ -30,6 +30,9 @@
     <ClCompile Include="CameraControls.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="TextureController.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="glsl.h">
@@ -44,13 +47,21 @@
     <ClInclude Include="CameraControls.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="TextureController.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Terrain.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Text Include="fragmentshader.fsh">
       <Filter>Source Files</Filter>
     </Text>
-    <Text Include="vertexshader.vsh">
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="vertexshader.vsh">
       <Filter>Source Files</Filter>
-    </Text>
+    </FxCompile>
   </ItemGroup>
 </Project>

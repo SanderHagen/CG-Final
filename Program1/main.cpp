@@ -8,8 +8,8 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include "objloader.hpp"
-#include "texture.hpp"
 #include "CameraControls.h"
+#include "TextureController.h"
 
 #include "glsl.h"
 
@@ -19,7 +19,7 @@ using namespace std;
 //--------------------------------------------------------------------------------
 // Consts
 //--------------------------------------------------------------------------------
-
+const int amountOfObjects = 6;
 const int WIDTH = 800, HEIGHT = 600;
 const char * fragshader_name = "fragmentshader.fsh";
 const char * vertexshader_name = "vertexshader.vsh";
@@ -41,24 +41,32 @@ struct Material
 	float power;
 };
 
+struct Animation {
+	float rotation;
+	bool rotateBack = false;
+	float timePassed = 0;
+};
+
 //--------------------------------------------------------------------------------
 // Variables
 //--------------------------------------------------------------------------------
 
 GLuint program_id;
-GLuint vao[2];
-GLuint uniform_mv;
-GLuint texture_id[2];
+GLuint vao[amountOfObjects];
+GLuint uniform_mv, uniform_material_ambient, uniform_material_diffuse, uniform_specular, uniform_material_power;
+GLuint textures[amountOfObjects];
 
 CameraControls* camera;
+TextureController* textureController;
 
 glm::vec3 specular;
 
-glm::mat4 model[2], view, projection;
-glm::mat4 mv[2];
+glm::mat4 model[amountOfObjects], view, projection;
+glm::mat4 mv[amountOfObjects];
 
 LightSource light;
-Material material[2];
+Material material[amountOfObjects];
+Animation animation[amountOfObjects];
 
 
 
@@ -67,9 +75,9 @@ Material material[2];
 // Mesh variables
 //--------------------------------------------------------------------------------
 
-vector<glm::vec3> vertices[2];
-vector<glm::vec3> normals[2];
-vector<glm::vec2> uvs[2];
+vector<glm::vec3> vertices[amountOfObjects];
+vector<glm::vec3> normals[amountOfObjects];
+vector<glm::vec2> uvs[amountOfObjects];
 
 
 //--------------------------------------------------------------------------------
@@ -94,19 +102,48 @@ void Render()
 
 	view = camera->viewMatrix;
 
-	for (int i = 0; i < 2; i++) {
-		// Send vao
-		glBindVertexArray(vao[i]);
-		glDrawArrays(GL_TRIANGLES, 0, vertices[i].size());
-		glBindVertexArray(0);
-
-		// Do transformation
-		model[i] = glm::rotate(model[i], 0.01f, glm::vec3(0.0f, 1.0f, 0.0f));
-		mv[i] = view * model[i];
+	for (int i = 0; i < amountOfObjects; i++) {
 
 		// Send mvp
 		glUseProgram(program_id);
+
+		// Do transformation
+		if (i == 5) {
+			if (animation[i].rotation <= 160 && animation[i].rotateBack == false) {
+				model[i] = glm::translate(model[i], glm::vec3(0.0f, 0.01f, 0.0f));
+				model[i] = glm::rotate(model[i], 0.01f, glm::vec3(1.0f, 0.0f, 0.0f));
+				animation[i].rotation += 1;
+				if (animation[i].rotation >= 160) {
+					animation[i].rotateBack = true;
+				}
+			}
+			if(animation[i].rotateBack) {
+				model[i] = glm::translate(model[i], glm::vec3(0.0f, -0.01f, 0.0f));
+				model[i] = glm::rotate(model[i], -0.01f, glm::vec3(1.0f, 0.0f, 0.0f));
+				animation[i].rotation -= 1;
+				if (animation[i].rotation <= 0) {
+					animation[i].rotateBack = false;
+				}
+			}
+		}
+		mv[i] = view * model[i];
+
+
 		glUniformMatrix4fv(uniform_mv, 1, GL_FALSE, glm::value_ptr(mv[i]));
+		glUniform3fv(uniform_material_ambient, 1, glm::value_ptr(material[i].ambient_color));
+		glUniform3fv(uniform_material_diffuse, 1, glm::value_ptr(material[i].diffuse_color));
+		glUniform3fv(uniform_specular, 1, glm::value_ptr(specular));
+		glUniform1f(uniform_material_power, material[i].power);
+
+		glBindTexture(GL_TEXTURE_2D, textures[i]);
+		// Send vao
+		glBindVertexArray(vao[i]);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glDrawArrays(GL_TRIANGLES, 0, vertices[i].size());
+		glBindVertexArray(0);
 	}
 	glutSwapBuffers();
 }
@@ -136,7 +173,7 @@ void InitGlutGlew(int argc, char **argv)
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
 	glutInitWindowSize(WIDTH, HEIGHT);
-	glutCreateWindow("Hello OpenGL");
+	glutCreateWindow("Project Graphics");
 	glutDisplayFunc(Render);
 	glutKeyboardFunc(keyboardHandler);
 	glutTimerFunc(DELTA, Render, 0);
@@ -168,16 +205,21 @@ void InitShaders()
 
 void InitMatrices()
 {
-	for (int i = 0; i < 2; i++) {
+	for (int i = 0; i < amountOfObjects; i++) {
 		model[i] = glm::mat4();
 		view = glm::mat4();
 		projection = glm::perspective(
 			glm::radians(45.0f),
 			1.0f * WIDTH / HEIGHT, 0.1f,
-			20.0f);
+			200.0f);
 	}
-	model[1] = glm::translate(model[1], glm::vec3(0.0, 0.0, -10.0));
 	model[0] = glm::translate(model[0], glm::vec3(0.0, 0.0, -11.0));
+	model[1] = glm::translate(model[1], glm::vec3(0.0, -1.0, -5.0));
+	model[2] = glm::translate(model[2], glm::vec3(0.0, -1.0, 0.0));
+	model[3] = glm::translate(model[3], glm::vec3(15.0, -1.0, 0.0));
+	model[4] = glm::translate(model[4], glm::vec3(50.0, -1.0, -4.0));
+	model[5] = glm::translate(model[5], glm::vec3(0.0, -1.0, 20.0));
+
 
 }
 
@@ -186,14 +228,12 @@ void InitMatrices()
 //------------------------------------------------------------
 void InitObjects()
 {
-	bool res = loadOBJ("Objects/teapot.obj", vertices[1], uvs[1], normals[1]);
-	bool res2 = loadOBJ("Objects/Porsche_911_GT2.obj", vertices[0], uvs[0], normals[0]);
-
-	//bool res = loadOBJ("Objects/BWM X5 4.obj", vertices, uvs, normals);
-	//texture_id = loadDDS("Textures/uvmap.DDS");
-	//texture_id = loadBMP("Textures/uvtemplate.bmp");
-	texture_id[0] = loadBMP("Textures/Yellobrk.bmp");
-	texture_id[1] = loadBMP("Textures/uvmap.DDS");
+	loadOBJ("Objects/Porsche_911_GT2.obj", vertices[0], uvs[0], normals[0]);
+	loadOBJ("Objects/teapot.obj", vertices[1], uvs[1], normals[1]);
+	loadOBJ("Objects/Terrain.obj", vertices[2], uvs[2], normals[2]);
+	loadOBJ("Objects/Basic_tree.obj", vertices[3], uvs[3], normals[3]);
+	loadOBJ("Objects/Basic_house_joined.obj", vertices[4], uvs[4], normals[4]);
+	loadOBJ("Objects/trash_can.obj", vertices[5], uvs[5], normals[5]);
 }
 
 //------------------------------------------------------------
@@ -201,14 +241,26 @@ void InitObjects()
 //------------------------------------------------------------
 void InitMaterialsLight()
 {
-	light.position = glm::vec3(4.0, 4.0, 4.0);
-	material[0].ambient_color = glm::vec3(0.2, 0.2, 0.0);
-	material[0].diffuse_color = glm::vec3(0.5, 0.5, 0.0);
+	light.position = glm::vec3(4.0, 20.0, 4.0);
+	material[0].ambient_color = glm::vec3(0.0, 0.0, 0.0);
+	material[0].diffuse_color = glm::vec3(0.0, 0.0, 0.0);
 	material[0].power = 128;
 	material[1].ambient_color = glm::vec3(0.3, 0.1, 0.1);
 	material[1].diffuse_color = glm::vec3(0.5, 0.5, 0.4);
 	material[1].power = 128;
-	specular = glm::vec3(1.0);
+	material[2].ambient_color = glm::vec3(0.0, 0.0, 0.0);
+	material[2].diffuse_color = glm::vec3(0.0, 0.0, 0.0);
+	material[2].power = 68;
+	material[3].ambient_color = glm::vec3(0.0, 0.0, 0.0);
+	material[3].diffuse_color = glm::vec3(0.0, 0.0, 0.0);
+	material[3].power = 68;
+	material[4].ambient_color = glm::vec3(0.0, 0.0, 0.0);
+	material[4].diffuse_color = glm::vec3(0.0, 0.0, 0.0);
+	material[4].power = 68;	
+	material[5].ambient_color = glm::vec3(0.0, 0.0, 0.0);
+	material[5].diffuse_color = glm::vec3(0.0, 0.0, 0.0);
+	material[5].power = 68;
+	specular = glm::vec3(0.8);
 }
 
 //------------------------------------------------------------
@@ -220,18 +272,18 @@ void InitBuffers()
 {
 	GLuint position_id;
 	GLuint normal_id;
-	GLuint vbo_vertices[2];
-	GLuint vbo_normals[2];
-	GLuint vbo_uvs[2];
+	GLuint vbo_vertices[amountOfObjects];
+	GLuint vbo_normals[amountOfObjects];
+	GLuint vbo_uvs[amountOfObjects];
 
-	for (int i = 0; i < 2; i++) {
+	for (int i = 0; i < amountOfObjects; i++) {
 		// vbo for vertices
 		glGenBuffers(1, &vbo_vertices[i]);
 		glBindBuffer(GL_ARRAY_BUFFER, vbo_vertices[i]);
 		glBufferData(GL_ARRAY_BUFFER, vertices[i].size() * sizeof(glm::vec3), &(vertices[i][0]), GL_STATIC_DRAW);
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-		// vbo for vertices
+		// vbo for normals
 		glGenBuffers(1, &vbo_normals[i]);
 		glBindBuffer(GL_ARRAY_BUFFER, vbo_normals[i]);
 		glBufferData(GL_ARRAY_BUFFER, normals[i].size() * sizeof(glm::vec3), &(normals[i][0]), GL_STATIC_DRAW);
@@ -277,31 +329,17 @@ void InitBuffers()
 		// Stop bind to vao
 		glBindVertexArray(0);
 
-		glGenBuffers(1, &vbo_normals[i]);
-		glBindBuffer(GL_ARRAY_BUFFER, vbo_normals[i]);
-		glBufferData(GL_ARRAY_BUFFER,
-			normals[i].size() * sizeof(glm::vec3),
-			&normals[i][0], GL_STATIC_DRAW);
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-		GLuint normalID = glGetAttribLocation(program_id, "normal");
-
-		glBindBuffer(GL_ARRAY_BUFFER, vbo_normals[i]);
-		glVertexAttribPointer(normalID, 3, GL_FLOAT, GL_FALSE, 0, 0);
-		glEnableVertexAttribArray(normalID);
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
-
 		// Make uniform vars
 		uniform_mv = glGetUniformLocation(program_id, "mv");
 		GLuint uniform_proj = glGetUniformLocation(program_id, "projection");
 		GLuint uniform_light_pos = glGetUniformLocation(program_id, "light_pos");
-		GLuint uniform_material_ambient = glGetUniformLocation(program_id,
+		uniform_material_ambient = glGetUniformLocation(program_id,
 			"mat_ambient");
-		GLuint uniform_material_diffuse = glGetUniformLocation(program_id,
+		uniform_material_diffuse = glGetUniformLocation(program_id,
 			"mat_diffuse");
 
-		GLuint uniform_specular = glGetUniformLocation(program_id, "mat_specular");
-		GLuint uniform_material_power = glGetUniformLocation(program_id, "mat_power");
+		uniform_specular = glGetUniformLocation(program_id, "mat_specular");
+		uniform_material_power = glGetUniformLocation(program_id, "mat_power");
 
 		glUseProgram(program_id);
 
@@ -313,16 +351,14 @@ void InitBuffers()
 		glUniform3fv(uniform_material_diffuse, 1, glm::value_ptr(material[i].diffuse_color));
 		glUniform3fv(uniform_specular, 1, glm::value_ptr(specular));
 		glUniform1f(uniform_material_power, material[i].power);
-
-		// Fill uniform var
-		glUniformMatrix4fv(uniform_mv, 1, GL_FALSE, glm::value_ptr(mv[i]));
 	}
 
 
 }
 
-void InitCamera() {
+void InitControllers() {
 	camera = new CameraControls();
+	textureController = new TextureController();
 }
 
 void handleKeyboardInput(unsigned char key, int x, int y) {
@@ -341,12 +377,16 @@ void handleMouseMove(int x, int y) {
 int main(int argc, char ** argv)
 {
 	InitGlutGlew(argc, argv);
+	InitControllers();
 	InitMaterialsLight();
 	InitShaders();
 	InitMatrices();
 	InitObjects();
 	InitBuffers();
-	InitCamera();
+	textureController->LoadTextures(textures);
+
+	glEnable(GL_TEXTURE_2D);
+
 
 	glutKeyboardFunc(handleKeyboardInput);
 	glutMouseFunc(handleMouseInput);

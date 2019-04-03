@@ -5,7 +5,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 void CameraControls::CaptureKeys(unsigned char key, int x, int y) {
-	float speed = 0.05;
+	float speed = 0.1;
 	float dz = 0;
 	float dx = 0;
 	float yaw = 0;
