@@ -87,6 +87,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="AnimationController.cpp" />
     <ClCompile Include="CameraControls.cpp" />
     <ClCompile Include="glsl.cpp" />
     <ClCompile Include="main.cpp" />
@@ -95,6 +96,8 @@
     <ClCompile Include="TextureController.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Animation.h" />
+    <ClInclude Include="AnimationController.h" />
     <ClInclude Include="CameraControls.h" />
     <ClInclude Include="glsl.h" />
     <ClInclude Include="objloader.hpp" />
@@ -103,12 +106,12 @@
     <ClInclude Include="TextureController.h" />
   </ItemGroup>
   <ItemGroup>
-    <Text Include="fragmentshader.fsh">
+    <Text Include="fragmentshader.frag">
       <FileType>Document</FileType>
     </Text>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="vertexshader.vsh">
+    <FxCompile Include="vertexshader.vert">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
     </FxCompile>
   </ItemGroup>

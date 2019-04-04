@@ -10,6 +10,8 @@
 #include "objloader.hpp"
 #include "CameraControls.h"
 #include "TextureController.h"
+#include "AnimationController.h"
+#include "Animation.h"
 
 #include "glsl.h"
 
@@ -19,10 +21,10 @@ using namespace std;
 //--------------------------------------------------------------------------------
 // Consts
 //--------------------------------------------------------------------------------
-const int amountOfObjects = 6;
+const int amountOfObjects = 7;
 const int WIDTH = 800, HEIGHT = 600;
-const char * fragshader_name = "fragmentshader.fsh";
-const char * vertexshader_name = "vertexshader.vsh";
+const char * fragshader_name = "fragmentshader.frag";
+const char * vertexshader_name = "vertexshader.vert";
 unsigned const int DELTA = 10;
 
 //--------------------------------------------------------------------------------
@@ -41,11 +43,7 @@ struct Material
 	float power;
 };
 
-struct Animation {
-	float rotation;
-	bool rotateBack = false;
-	float timePassed = 0;
-};
+
 
 //--------------------------------------------------------------------------------
 // Variables
@@ -58,6 +56,7 @@ GLuint textures[amountOfObjects];
 
 CameraControls* camera;
 TextureController* textureController;
+AnimationController* animationController;
 
 glm::vec3 specular;
 
@@ -108,23 +107,11 @@ void Render()
 		glUseProgram(program_id);
 
 		// Do transformation
+		if (i == 0) {
+			model[i] = animationController->AnimateCar(model[i], &animation[i]);
+		}
 		if (i == 5) {
-			if (animation[i].rotation <= 160 && animation[i].rotateBack == false) {
-				model[i] = glm::translate(model[i], glm::vec3(0.0f, 0.01f, 0.0f));
-				model[i] = glm::rotate(model[i], 0.01f, glm::vec3(1.0f, 0.0f, 0.0f));
-				animation[i].rotation += 1;
-				if (animation[i].rotation >= 160) {
-					animation[i].rotateBack = true;
-				}
-			}
-			if(animation[i].rotateBack) {
-				model[i] = glm::translate(model[i], glm::vec3(0.0f, -0.01f, 0.0f));
-				model[i] = glm::rotate(model[i], -0.01f, glm::vec3(1.0f, 0.0f, 0.0f));
-				animation[i].rotation -= 1;
-				if (animation[i].rotation <= 0) {
-					animation[i].rotateBack = false;
-				}
-			}
+			model[i] = animationController->AnimateTrashBin(model[i], &animation[i]);
 		}
 		mv[i] = view * model[i];
 
@@ -219,6 +206,7 @@ void InitMatrices()
 	model[3] = glm::translate(model[3], glm::vec3(15.0, -1.0, 0.0));
 	model[4] = glm::translate(model[4], glm::vec3(50.0, -1.0, -4.0));
 	model[5] = glm::translate(model[5], glm::vec3(0.0, -1.0, 20.0));
+	model[6] = glm::translate(model[5], glm::vec3(0.0, 0.0, -10.0));
 
 
 }
@@ -234,6 +222,7 @@ void InitObjects()
 	loadOBJ("Objects/Basic_tree.obj", vertices[3], uvs[3], normals[3]);
 	loadOBJ("Objects/Basic_house_joined.obj", vertices[4], uvs[4], normals[4]);
 	loadOBJ("Objects/trash_can.obj", vertices[5], uvs[5], normals[5]);
+	loadOBJ("Objects/postbus.obj", vertices[6], uvs[6], normals[6]);
 }
 
 //------------------------------------------------------------
@@ -260,6 +249,9 @@ void InitMaterialsLight()
 	material[5].ambient_color = glm::vec3(0.0, 0.0, 0.0);
 	material[5].diffuse_color = glm::vec3(0.0, 0.0, 0.0);
 	material[5].power = 68;
+	material[6].ambient_color = glm::vec3(0.0, 0.0, 0.0);
+	material[6].diffuse_color = glm::vec3(0.0, 0.0, 0.0);
+	material[6].power = 128;
 	specular = glm::vec3(0.8);
 }
 
@@ -359,6 +351,7 @@ void InitBuffers()
 void InitControllers() {
 	camera = new CameraControls();
 	textureController = new TextureController();
+	animationController = new AnimationController();
 }
 
 void handleKeyboardInput(unsigned char key, int x, int y) {

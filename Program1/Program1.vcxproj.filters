@@ -33,6 +33,9 @@
     <ClCompile Include="TextureController.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="AnimationController.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="glsl.h">
@@ -53,15 +56,21 @@
     <ClInclude Include="Terrain.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="AnimationController.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Animation.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <Text Include="fragmentshader.fsh">
-      <Filter>Source Files</Filter>
-    </Text>
-  </ItemGroup>
-  <ItemGroup>
-    <FxCompile Include="vertexshader.vsh">
+    <FxCompile Include="vertexshader.vert">
       <Filter>Source Files</Filter>
     </FxCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="fragmentshader.frag">
+      <Filter>Source Files</Filter>
+    </Text>
   </ItemGroup>
 </Project>
