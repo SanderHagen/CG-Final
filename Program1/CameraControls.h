@@ -9,11 +9,14 @@ public:
 	bool firstpersonmode = true;
 	bool isMousePressed = false;
 	float pitch = 0;
-	float yaw = 0;
+	float yaw = 0;	
+	float pitchOV = 0;
+	float yawOV = 0;
 	float roll = 0;
 	glm::vec3 fpsPos;
 	glm::vec3 overviewPos;
 	glm::vec3 eyeVector;
+	glm::vec3 eyeVectorOV;
 	glm::vec2 mousePosition;
 	glm::mat4 viewMatrix;
 	glm::mat4 overviewMat;
@@ -21,6 +24,7 @@ public:
 	CameraControls(glm::mat4 fpsView) {
 		viewMatrix = fpsView;
 		eyeVector = glm::vec3();
+		eyeVectorOV = glm::vec3();
 		fpsPos = glm::vec3(0.0, 0.0, 0.0);
 		overviewPos = glm::vec3(30.0, -20.0, -15.0);
 		overviewMat = glm::lookAt(overviewPos,glm::vec3(),glm::vec3(0.0,1.0,0.0));

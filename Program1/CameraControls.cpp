@@ -9,8 +9,8 @@ void CameraControls::CaptureKeys(unsigned char key, int x, int y) {
 	float dz = 0;
 	float dx = 0;
 	float yaw = 0;
-	
-	glm::mat4 mat = viewMatrix;
+	glm::mat4 mat;
+
 
 
 	switch (key) {
@@ -36,11 +36,21 @@ void CameraControls::CaptureKeys(unsigned char key, int x, int y) {
 		break;
 	}
 
-	glm::vec3 forward(mat[0][2], mat[1][2], mat[2][2]);
-	glm::vec3 strafe(mat[0][0], mat[1][0], mat[2][0]);
 
-	eyeVector += (-dz * forward + dx * strafe)*speed;
+	if (firstpersonmode) {
+		mat = viewMatrix;
+		glm::vec3 forward(mat[0][2], mat[1][2], mat[2][2]);
+		glm::vec3 strafe(mat[0][0], mat[1][0], mat[2][0]);
 
+		eyeVector += (-dz * forward + dx * strafe)*speed;
+	}
+	else {
+		mat = overviewMat;
+		glm::vec3 forward(mat[0][2], mat[1][2], mat[2][2]);
+		glm::vec3 strafe(mat[0][0], mat[1][0], mat[2][0]);
+
+		eyeVectorOV += (-dz * forward + dx * strafe)*speed;
+	}
 	UpdateView();
 }
 
@@ -49,19 +59,39 @@ void CameraControls::UpdateView() {
 	glm::mat4 matYaw = glm::mat4(1.0f);
 	glm::mat4 matRoll = glm::mat4(1.0f);
 
-	matPitch = glm::rotate(matPitch, pitch, glm::vec3(1.0f, 0.0f, 0.0f));
-	matYaw = glm::rotate(matYaw, yaw, glm::vec3(0.0f, 1.0f, 0.0f));
-	matRoll = glm::rotate(matRoll, roll, glm::vec3(0.0f, 0.0f, 1.0f));
 
-	glm::mat4 rotate = matRoll * matPitch * matYaw;
 
-	glm::mat4 translate = glm::mat4(1.0f);
 	//if firstpersonmode, look up and go forward on same y axis
 	if (firstpersonmode) {
+		matPitch = glm::rotate(matPitch, pitch, glm::vec3(1.0f, 0.0f, 0.0f));
+		matYaw = glm::rotate(matYaw, yaw, glm::vec3(0.0f, 1.0f, 0.0f));
+		matRoll = glm::rotate(matRoll, roll, glm::vec3(0.0f, 0.0f, 1.0f));
+
+		glm::mat4 rotate = matRoll * matPitch * matYaw;
+
+		glm::mat4 translate = glm::mat4(1.0f);
+
 		eyeVector.y = 1;
+		translate = glm::translate(translate, -eyeVector);
+		translate = glm::translate(translate, fpsPos);
+		
+		viewMatrix = rotate * translate;
 	}
-	translate = glm::translate(translate, -eyeVector);
-	viewMatrix = rotate * translate;
+	else {
+		matPitch = glm::rotate(matPitch, pitchOV, glm::vec3(1.0f, 0.0f, 0.0f));
+		matYaw = glm::rotate(matYaw, yawOV, glm::vec3(0.0f, 1.0f, 0.0f));
+		matRoll = glm::rotate(matRoll, roll, glm::vec3(0.0f, 0.0f, 1.0f));
+
+		glm::mat4 rotate = matRoll * matPitch * matYaw;
+
+		glm::mat4 translate = glm::mat4(1.0f);
+
+		translate = glm::translate(translate, -eyeVectorOV);
+
+		translate = glm::translate(translate, overviewPos);
+
+		overviewMat = rotate * translate;
+	}
 };
 
 void CameraControls::CaptureMouse(int button, int state, int x, int y) {
@@ -81,8 +111,15 @@ void CameraControls::CaptureMouseMove(int x, int y) {
 	}
 	glm::vec2 mouse_delta = glm::vec2(x, y) - mousePosition;
 
-	yaw += mouseX_Sensitivity * mouse_delta.x;
-	pitch += mouseY_Sensitivity * mouse_delta.y;
+	if (firstpersonmode) {
+		yaw += mouseX_Sensitivity * mouse_delta.x;
+		pitch += mouseY_Sensitivity * mouse_delta.y;
+	}
+	else {
+		yawOV += mouseX_Sensitivity * mouse_delta.x;
+		pitchOV += mouseY_Sensitivity * mouse_delta.y;
+	}
+
 
 	mousePosition = glm::vec2(x, y);
 	UpdateView();
