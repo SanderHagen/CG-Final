@@ -91,6 +91,7 @@
     <ClCompile Include="CameraControls.cpp" />
     <ClCompile Include="glsl.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="ObjectWrapper.cpp" />
     <ClCompile Include="objloader.cpp" />
     <ClCompile Include="texture.cpp" />
     <ClCompile Include="TextureController.cpp" />
@@ -100,6 +101,8 @@
     <ClInclude Include="AnimationController.h" />
     <ClInclude Include="CameraControls.h" />
     <ClInclude Include="glsl.h" />
+    <ClInclude Include="Material.h" />
+    <ClInclude Include="ObjectWrapper.h" />
     <ClInclude Include="objloader.hpp" />
     <ClInclude Include="Terrain.h" />
     <ClInclude Include="texture.hpp" />

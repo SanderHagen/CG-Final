@@ -7,11 +7,12 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include "objloader.hpp"
 #include "CameraControls.h"
 #include "TextureController.h"
 #include "AnimationController.h"
 #include "Animation.h"
+#include "Material.h"
+#include "ObjectWrapper.h"
 
 #include "glsl.h"
 
@@ -21,7 +22,7 @@ using namespace std;
 //--------------------------------------------------------------------------------
 // Consts
 //--------------------------------------------------------------------------------
-const int amountOfObjects = 7;
+const int amountOfObjects = 9;
 const int WIDTH = 800, HEIGHT = 600;
 const char * fragshader_name = "fragmentshader.frag";
 const char * vertexshader_name = "vertexshader.vert";
@@ -36,12 +37,6 @@ struct LightSource
 	glm::vec3 position;
 };
 
-struct Material
-{
-	glm::vec3 ambient_color;
-	glm::vec3 diffuse_color;
-	float power;
-};
 
 
 
@@ -57,10 +52,11 @@ GLuint textures[amountOfObjects];
 CameraControls* camera;
 TextureController* textureController;
 AnimationController* animationController;
+ObjectWrapper* objectWrapper;
 
 glm::vec3 specular;
 
-glm::mat4 model[amountOfObjects], view, projection;
+glm::mat4 model[amountOfObjects], view,overview, projection;
 glm::mat4 mv[amountOfObjects];
 
 LightSource light;
@@ -99,7 +95,12 @@ void Render()
 	glClearColor(0.0, 0.0, 0.0, 1.0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	view = camera->viewMatrix;
+	if (camera->firstpersonmode) {
+		view = camera->viewMatrix;
+	}
+	else {
+		view = camera->overviewMat;
+	}
 
 	for (int i = 0; i < amountOfObjects; i++) {
 
@@ -192,37 +193,43 @@ void InitShaders()
 
 void InitMatrices()
 {
+	view = glm::mat4();
 	for (int i = 0; i < amountOfObjects; i++) {
 		model[i] = glm::mat4();
-		view = glm::mat4();
 		projection = glm::perspective(
 			glm::radians(45.0f),
 			1.0f * WIDTH / HEIGHT, 0.1f,
 			200.0f);
 	}
-	model[0] = glm::translate(model[0], glm::vec3(0.0, 0.0, -11.0));
-	model[1] = glm::translate(model[1], glm::vec3(0.0, -1.0, -5.0));
-	model[2] = glm::translate(model[2], glm::vec3(0.0, -1.0, 0.0));
-	model[3] = glm::translate(model[3], glm::vec3(15.0, -1.0, 0.0));
-	model[4] = glm::translate(model[4], glm::vec3(50.0, -1.0, -4.0));
-	model[5] = glm::translate(model[5], glm::vec3(0.0, -1.0, 20.0));
-	model[6] = glm::translate(model[5], glm::vec3(0.0, 0.0, -10.0));
-
-
 }
 
 //------------------------------------------------------------
 // void InitObjects()
+// method to add a new object
+// 2 steps to add object.
+// 1: copy a line below, fill in the parameters accordingly.
+// 2: increase the constant "amountOfObjects by 1"
 //------------------------------------------------------------
 void InitObjects()
 {
-	loadOBJ("Objects/Porsche_911_GT2.obj", vertices[0], uvs[0], normals[0]);
-	loadOBJ("Objects/teapot.obj", vertices[1], uvs[1], normals[1]);
-	loadOBJ("Objects/Terrain.obj", vertices[2], uvs[2], normals[2]);
-	loadOBJ("Objects/Basic_tree.obj", vertices[3], uvs[3], normals[3]);
-	loadOBJ("Objects/Basic_house_joined.obj", vertices[4], uvs[4], normals[4]);
-	loadOBJ("Objects/trash_can.obj", vertices[5], uvs[5], normals[5]);
-	loadOBJ("Objects/postbus.obj", vertices[6], uvs[6], normals[6]);
+	//AddObject Signature (const char* path, glm::mat4* model,int objectNumber, glm::vec3 pos, vector<glm::vec3>* verts, vector<glm::vec3>* normals, vector<glm::vec2>* uvs, Material* material, glm::vec3 ambient_color, glm::vec3 diffuse_color, float power)
+	objectWrapper->AddObject("Objects/Porsche_911_GT2.obj", model, 0, glm::vec3(2.0, -0.2, 0.0), vertices, normals, uvs, material, glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 0.0, 0.0), 128);
+	objectWrapper->AddObject("Objects/teapot.obj", model, 1, glm::vec3(-8.0, -1.0, -10.0), vertices, normals, uvs, material, glm::vec3(0.3, 0.1, 0.1), glm::vec3(0.5, 0.5, 0.4), 128);
+	objectWrapper->AddObject("Objects/Terrain.obj", model, 2, glm::vec3(0.0, -1.0, 0.0), vertices, normals, uvs, material, glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 0.0, 0.0), 68);
+	objectWrapper->AddObject("Objects/Basic_tree.obj", model, 3, glm::vec3(15.0, -1.0, 0.0), vertices, normals, uvs, material, glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 0.0, 0.0), 68);
+	objectWrapper->AddObject("Objects/Basic_house_joined.obj", model, 4, glm::vec3(17.0, -1.0, -15.0), vertices, normals, uvs, material, glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 0.0, 0.0), 68);
+	objectWrapper->AddObject("Objects/trash_can.obj", model, 5, glm::vec3(10.0, -1.0, -30.0), vertices, normals, uvs, material, glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 0.0, 0.0), 68);
+	objectWrapper->AddObject("Objects/postbus.obj", model, 6, glm::vec3(7.0, -1.0, 14.0), vertices, normals, uvs, material, glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 0.0, 0.0), 128);
+	objectWrapper->AddObject("Objects/street.obj", model, 7, glm::vec3(0.0, -0.9, -30.0), vertices, normals, uvs, material, glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 0.0, 0.0), 128);
+	objectWrapper->AddObject("Objects/Basic_house_joined.obj", model, 8, glm::vec3(17.0, -1.0, 15.0), vertices, normals, uvs, material, glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 0.0, 0.0), 68);
+}
+
+//------------------------------------------------------------
+// MoveObjects()
+// Set objects to desired rotation on initialization.
+//------------------------------------------------------------
+void MoveObjects() {
+	model[6] = glm::rotate(model[6], glm::radians(180.0f), glm::vec3(0.0, 1.0, 0.0));
 }
 
 //------------------------------------------------------------
@@ -231,27 +238,6 @@ void InitObjects()
 void InitMaterialsLight()
 {
 	light.position = glm::vec3(4.0, 20.0, 4.0);
-	material[0].ambient_color = glm::vec3(0.0, 0.0, 0.0);
-	material[0].diffuse_color = glm::vec3(0.0, 0.0, 0.0);
-	material[0].power = 128;
-	material[1].ambient_color = glm::vec3(0.3, 0.1, 0.1);
-	material[1].diffuse_color = glm::vec3(0.5, 0.5, 0.4);
-	material[1].power = 128;
-	material[2].ambient_color = glm::vec3(0.0, 0.0, 0.0);
-	material[2].diffuse_color = glm::vec3(0.0, 0.0, 0.0);
-	material[2].power = 68;
-	material[3].ambient_color = glm::vec3(0.0, 0.0, 0.0);
-	material[3].diffuse_color = glm::vec3(0.0, 0.0, 0.0);
-	material[3].power = 68;
-	material[4].ambient_color = glm::vec3(0.0, 0.0, 0.0);
-	material[4].diffuse_color = glm::vec3(0.0, 0.0, 0.0);
-	material[4].power = 68;	
-	material[5].ambient_color = glm::vec3(0.0, 0.0, 0.0);
-	material[5].diffuse_color = glm::vec3(0.0, 0.0, 0.0);
-	material[5].power = 68;
-	material[6].ambient_color = glm::vec3(0.0, 0.0, 0.0);
-	material[6].diffuse_color = glm::vec3(0.0, 0.0, 0.0);
-	material[6].power = 128;
 	specular = glm::vec3(0.8);
 }
 
@@ -349,9 +335,10 @@ void InitBuffers()
 }
 
 void InitControllers() {
-	camera = new CameraControls();
+	camera = new CameraControls(view);
 	textureController = new TextureController();
 	animationController = new AnimationController();
+	objectWrapper = new ObjectWrapper();
 }
 
 void handleKeyboardInput(unsigned char key, int x, int y) {
@@ -370,11 +357,12 @@ void handleMouseMove(int x, int y) {
 int main(int argc, char ** argv)
 {
 	InitGlutGlew(argc, argv);
+	InitMatrices();
 	InitControllers();
 	InitMaterialsLight();
 	InitShaders();
-	InitMatrices();
 	InitObjects();
+	MoveObjects();
 	InitBuffers();
 	textureController->LoadTextures(textures);
 

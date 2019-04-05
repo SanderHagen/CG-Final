@@ -9,6 +9,10 @@ void CameraControls::CaptureKeys(unsigned char key, int x, int y) {
 	float dz = 0;
 	float dx = 0;
 	float yaw = 0;
+	
+	glm::mat4 mat = viewMatrix;
+
+
 	switch (key) {
 	case 'w':
 		dz = 2;
@@ -31,7 +35,6 @@ void CameraControls::CaptureKeys(unsigned char key, int x, int y) {
 		}
 		break;
 	}
-	glm::mat4 mat = viewMatrix;
 
 	glm::vec3 forward(mat[0][2], mat[1][2], mat[2][2]);
 	glm::vec3 strafe(mat[0][0], mat[1][0], mat[2][0]);
