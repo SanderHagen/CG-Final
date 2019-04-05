@@ -11,8 +11,6 @@ void CameraControls::CaptureKeys(unsigned char key, int x, int y) {
 	float yaw = 0;
 	glm::mat4 mat;
 
-
-
 	switch (key) {
 	case 'w':
 		dz = 2;

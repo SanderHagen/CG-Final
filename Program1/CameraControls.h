@@ -10,8 +10,9 @@ public:
 	bool isMousePressed = false;
 	float pitch = 0;
 	float yaw = 0;	
-	float pitchOV = 0;
-	float yawOV = 0;
+	//define overview camera lookat
+	float pitchOV = glm::radians(12.0);
+	float yawOV = glm::radians(65.0);
 	float roll = 0;
 	glm::vec3 fpsPos;
 	glm::vec3 overviewPos;
@@ -27,7 +28,7 @@ public:
 		eyeVectorOV = glm::vec3();
 		fpsPos = glm::vec3(0.0, 0.0, 0.0);
 		overviewPos = glm::vec3(30.0, -20.0, -15.0);
-		overviewMat = glm::lookAt(overviewPos,glm::vec3(),glm::vec3(0.0,1.0,0.0));
+		overviewMat = glm::mat4();
 	}
 
 	void CaptureKeys(unsigned char key, int x, int y);

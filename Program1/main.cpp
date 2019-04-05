@@ -214,7 +214,7 @@ void InitObjects()
 {
 	//AddObject Signature (const char* path, glm::mat4* model,int objectNumber, glm::vec3 pos, vector<glm::vec3>* verts, vector<glm::vec3>* normals, vector<glm::vec2>* uvs, Material* material, glm::vec3 ambient_color, glm::vec3 diffuse_color, float power)
 	objectWrapper->AddObject("Objects/Porsche_911_GT2.obj", model, 0, glm::vec3(2.0, -0.2, 0.0), vertices, normals, uvs, material, glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 0.0, 0.0), 128);
-	objectWrapper->AddObject("Objects/teapot.obj", model, 1, glm::vec3(-8.0, -1.0, -10.0), vertices, normals, uvs, material, glm::vec3(0.3, 0.1, 0.1), glm::vec3(0.5, 0.5, 0.4), 128);
+	objectWrapper->AddObject("Objects/teapot.obj", model, 1, glm::vec3(-8.0, -1.0, -10.0), vertices, normals, uvs, material, glm::vec3(0.8, 0.5, 0.5), glm::vec3(0.8, 0.5, 0.4), 128);
 	objectWrapper->AddObject("Objects/Terrain.obj", model, 2, glm::vec3(0.0, -1.0, 0.0), vertices, normals, uvs, material, glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 0.0, 0.0), 68);
 	objectWrapper->AddObject("Objects/Basic_tree.obj", model, 3, glm::vec3(15.0, -1.0, 0.0), vertices, normals, uvs, material, glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 0.0, 0.0), 68);
 	objectWrapper->AddObject("Objects/Basic_house_joined.obj", model, 4, glm::vec3(17.0, -1.0, -15.0), vertices, normals, uvs, material, glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 0.0, 0.0), 68);
